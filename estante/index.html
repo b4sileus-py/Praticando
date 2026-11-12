@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<!-- Desenvolvido por Roberto | Versão 0.1 | Padrão "Identidade Roberto" (modo Livre) -->
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Roberto">
+<meta name="description" content="Registro pessoal de leituras: o que você está lendo, o que já leu e o que quer ler.">
+<title>Estante</title>
+<style>
+  /* ---------- Tokens: tema claro ---------- */
+  :root {
+    --papel: #e9eeeb;
+    --folha: #fafbfa;
+    --folha-2: #dde5e0;
+    --tinta: #16201c;
+    --tinta-suave: #4e5d57;
+    --fio: #c6d1cb;
+    --fio-forte: #75857e;
+    --verniz: #1d5c46;
+    --verniz-forte: #154434;
+    --sobre-verniz: #ffffff;
+    --pendente: #8a5300;
+    --pendente-fundo: #f7e9cc;
+    --erro: #b42318;
+    --erro-fundo: #fbe4e1;
+    --madeira: #6b4a2e;
+    --madeira-luz: #8c6844;
+    --sombra-livro: rgba(22, 32, 28, .28);
+    --foco: #1d5c46;
+
+    --serif: "Palatino Linotype", "Book Antiqua", Palatino, "Iowan Old Style", Georgia, serif;
+    --sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+
+    /* Escala tipográfica (razão 1,25) */
+    --t-1: .8rem; --t0: 1rem; --t1: 1.25rem; --t2: 1.563rem; --t3: 1.953rem; --t4: 2.441rem;
+    color-scheme: light;
+  }
+  /* ---------- Tokens: tema escuro ---------- */
+  :root[data-theme="dark"] {
+    --papel: #0e1714;
+    --folha: #16231e;
+    --folha-2: #20322b;
+    --tinta: #e3ebe7;
+    --tinta-suave: #a1b5ac;
+    --fio: #2c3f37;
+    --fio-forte: #6a8178;
+    --verniz: #7dd3ae;
+    --verniz-forte: #a3e3c7;
+    --sobre-verniz: #0e1714;
+    --pendente: #f2b84b;
+    --pendente-fundo: #352a12;
+    --erro: #ff8a80;
+    --erro-fundo: #3a1916;
+    --madeira: #5a3f28;
+    --madeira-luz: #7d5c3d;
+    --sombra-livro: rgba(0, 0, 0, .5);
+    --foco: #7dd3ae;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--papel);
+    color: var(--tinta);
+    font: var(--t0)/1.5 var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Cabeçalho ---------- */
+  .topo {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    max-width: 1120px; width: 100%; margin: 0 auto; padding: 28px 24px 8px;
+  }
+  .marca { font: 600 var(--t3)/1 var(--serif); letter-spacing: -.01em; margin: 0; }
+  .marca small { display: block; font: 400 var(--t-1)/1.4 var(--sans); color: var(--tinta-suave); margin-top: 6px; letter-spacing: 0; }
+  .btn-tema {
+    background: none; border: 1px solid var(--fio-forte); border-radius: 999px;
+    padding: 6px 14px; cursor: pointer; font-size: .9rem; color: var(--tinta);
+  }
+  .btn-tema:hover { background: var(--folha-2); }
+
+  main { flex: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 0 24px 40px; }
+
+  /* ---------- A estante (elemento memorável) ---------- */
+  .estante {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: end;
+    margin: 16px 0 36px;
+  }
+  .prateleira { position: relative; min-width: 0; }
+  .lombadas {
+    list-style: none; margin: 0; padding: 24px 12px 0;
+    display: flex; align-items: flex-end; gap: 3px;
+    min-height: 268px; overflow-x: auto; overflow-y: hidden;
+    scrollbar-width: thin;
+  }
+  .lombadas li { flex: none; display: flex; }
+  .tabua {
+    height: 16px; border-radius: 2px;
+    background: linear-gradient(var(--madeira-luz), var(--madeira) 40%);
+    box-shadow: 0 6px 10px -6px var(--sombra-livro);
+  }
+  .lombada {
+    --cor: #1d5c46; --lido: 1;
+    position: relative; display: flex; align-items: center; justify-content: center;
+    border: 0; padding: 10px 0; cursor: pointer; overflow: hidden;
+    border-radius: 3px 3px 1px 1px;
+    color: #f4f2ea;
+    background:
+      linear-gradient(to top, var(--cor) calc(var(--lido) * 100%), transparent calc(var(--lido) * 100%)),
+      repeating-linear-gradient(135deg, color-mix(in srgb, var(--cor) 72%, #fff) 0 5px, color-mix(in srgb, var(--cor) 86%, #fff) 5px 10px);
+    box-shadow: inset 2px 0 0 rgba(255,255,255,.14), inset -3px 0 0 rgba(0,0,0,.18);
+    transform-origin: bottom center;
+    transition: transform .15s ease;
+  }
+  .lombada:hover { transform: translateY(-6px); }
+  .lombada:focus-visible { transform: translateY(-6px); outline-offset: 3px; }
+  .lombada .titulo-lombada {
+    writing-mode: vertical-rl; transform: rotate(180deg);
+    font: 600 .85rem/1.1 var(--serif); letter-spacing: .02em;
+    max-height: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-shadow: 0 1px 1px rgba(0,0,0,.35);
+  }
+  /* Livro em leitura: só o trecho lido é preenchido; o resto fica hachurado */
+  .lombada.lendo .titulo-lombada { color: #f4f2ea; }
+  /* Quero ler: lombada com contorno tracejado, ainda não está na mão */
+  .lombada.quero {
+    background: transparent;
+    border: 2px dashed color-mix(in srgb, var(--cor) 70%, var(--tinta));
+    color: var(--tinta);
+    box-shadow: none;
+  }
+  .lombada.quero .titulo-lombada { text-shadow: none; }
+  .lombada .fita {
+    position: absolute; top: -2px; right: 22%; width: 5px; height: 26px;
+    background: var(--pendente); clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+  }
+  .estante-vazia {
+    align-self: center; margin: 0 auto; padding: 40px 12px; max-width: 34ch; text-align: center;
+    color: var(--tinta-suave);
+  }
+  .estante-vazia p { margin: 0 0 16px; font: var(--t1)/1.4 var(--serif); color: var(--tinta); }
+  .estante-vazia .acoes-vazio { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+  /* Números da estante */
+  .numeros { list-style: none; margin: 0; padding: 0 0 22px; display: grid; gap: 14px; min-width: 150px; }
+  .numeros li { display: flex; flex-direction: column; }
+  .numeros strong { font: 600 var(--t4)/1 var(--serif); font-variant-numeric: lining-nums tabular-nums; }
+  .numeros span { font-size: .9rem; color: var(--tinta-suave); }
+
+  /* Entrada orquestrada: as lombadas sobem para a prateleira uma vez */
+  @keyframes subir { from { transform: translateY(105%); } to { transform: translateY(0); } }
+  .lombadas.entrando .lombada { animation: subir .55s cubic-bezier(.2, .8, .25, 1) backwards; animation-delay: calc(var(--i) * 35ms); }
+  .lombada.nova { animation: subir .45s cubic-bezier(.2, .8, .25, 1) backwards; }
+
+  /* ---------- Barra de ferramentas ---------- */
+  .ferramentas {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px;
+    padding: 16px 0; border-top: 1px solid var(--fio);
+  }
+  .busca { flex: 1 1 220px; max-width: 340px; position: relative; }
+  .busca input { width: 100%; padding: 9px 12px; }
+  .contagem { margin-left: auto; color: var(--tinta-suave); font-size: .9rem; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Botões ---------- */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    border-radius: 6px; padding: 9px 16px; cursor: pointer; font-weight: 600;
+    border: 1px solid transparent; line-height: 1.3;
+  }
+  .btn-principal { background: var(--verniz); color: var(--sobre-verniz); }
+  .btn-principal:hover { background: var(--verniz-forte); }
+  .btn-secundario { background: transparent; color: var(--tinta); border-color: var(--fio-forte); }
+  .btn-secundario:hover { background: var(--folha-2); }
+  .btn-perigo { background: transparent; color: var(--erro); border-color: var(--erro); }
+  .btn-perigo:hover { background: var(--erro-fundo); }
+  .btn-link { background: none; border: 0; padding: 4px 2px; color: var(--verniz); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-weight: 600; }
+
+  /* ---------- Chips (grupos de escolha) ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    border: 1px solid var(--fio-forte); background: transparent; border-radius: 999px;
+    padding: 5px 12px; cursor: pointer; font-size: .9rem; color: var(--tinta);
+  }
+  .chip:hover { background: var(--folha-2); }
+  .chip[aria-checked="true"], .chip[aria-pressed="true"] { background: var(--tinta); color: var(--papel); border-color: var(--tinta); }
+  .chip:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* ---------- Campos ---------- */
+  input[type="text"], input[type="search"], input[type="number"], input[type="date"] {
+    background: var(--folha); border: 1px solid var(--fio-forte); border-radius: 6px; padding: 8px 10px; width: 100%;
+  }
+  input:focus-visible { outline: 2px solid var(--foco); outline-offset: 0; border-color: var(--foco); }
+  input:disabled { background: var(--folha-2); color: var(--tinta-suave); cursor: not-allowed; }
+  input[aria-invalid="true"] { border-color: var(--erro); }
+
+  /* ---------- Tabela de livros ---------- */
+  .tabela { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .tabela caption { text-align: left; }
+  .tabela th { text-align: left; font-weight: 600; font-size: .85rem; color: var(--tinta-suave); padding: 0; border-bottom: 1px solid var(--fio-forte); position: sticky; top: 0; background: var(--papel); }
+  .tabela th button, .tabela th > span:not(.sr-only) { all: unset; display: flex; align-items: center; gap: 6px; padding: 10px 12px 10px 0; cursor: pointer; }
+  .tabela th > span:not(.sr-only) { cursor: default; }
+  .tabela th button:focus-visible { outline: 2px solid var(--foco); }
+  .tabela th .seta { font-size: .75rem; width: 1em; }
+  .tabela td { padding: 14px 12px 14px 0; border-bottom: 1px solid var(--fio); vertical-align: top; }
+  .tabela tr:hover td { background: color-mix(in srgb, var(--folha-2) 55%, transparent); }
+  .livro-titulo { font: 600 var(--t0)/1.3 var(--serif); }
+  .livro-autor { color: var(--tinta-suave); font-size: .9rem; }
+  .situacao { white-space: nowrap; }
+  .progresso { display: grid; gap: 4px; min-width: 120px; }
+  .barra { height: 6px; border-radius: 3px; background: var(--folha-2); overflow: hidden; }
+  .barra i { display: block; height: 100%; background: var(--verniz); }
+  .progresso small { color: var(--tinta-suave); }
+  .pendencia { display: inline-flex; gap: 4px; margin-top: 4px; color: var(--pendente); font-size: .85rem; font-weight: 600; }
+  .sem-resultado { padding: 32px 0; color: var(--tinta-suave); }
+
+  /* ---------- Seus dados ---------- */
+  .dados { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--fio); display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; color: var(--tinta-suave); font-size: .9rem; }
+  .dados p { margin: 0; flex: 1 1 280px; }
+  .aviso-armazenamento { background: var(--pendente-fundo); color: var(--tinta); border-left: 4px solid var(--pendente); padding: 10px 14px; border-radius: 4px; margin: 0 0 16px; }
+
+  /* ---------- Diálogos ---------- */
+  dialog {
+    border: 1px solid var(--fio-forte); border-radius: 10px; padding: 0; background: var(--folha); color: var(--tinta);
+    width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 32px);
+    box-shadow: 0 24px 60px -20px var(--sombra-livro);
+  }
+  dialog::backdrop { background: rgba(10, 18, 15, .45); }
+  .dlg-corpo { padding: 24px; overflow-y: auto; }
+  .dlg-corpo h2 { margin: 0 0 4px; font: 600 var(--t2)/1.2 var(--serif); }
+  .dlg-corpo .sub { margin: 0 0 18px; color: var(--tinta-suave); font-size: .9rem; }
+  .dlg-acoes { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; padding: 16px 24px; border-top: 1px solid var(--fio); }
+  .dlg-acoes .esquerda { margin-right: auto; }
+  .campo { display: grid; gap: 6px; margin-bottom: 16px; }
+  .campo > label, .campo > .rotulo { font-weight: 600; font-size: .9rem; }
+  .campo .dica { font-size: .85rem; color: var(--tinta-suave); }
+  .campo .msg-erro { font-size: .85rem; color: var(--erro); font-weight: 600; }
+  .linha { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .resumo-pendencias {
+    margin: 0 0 18px; padding: 10px 14px; border-radius: 4px;
+    background: var(--pendente-fundo); border-left: 4px solid var(--pendente); font-size: .9rem;
+  }
+  .resumo-pendencias[hidden] { display: none; }
+  .lista-pendencias { margin: 8px 0 0; padding-left: 20px; }
+
+  /* ---------- Toast ---------- */
+  .toasts { position: fixed; right: 20px; bottom: 20px; display: grid; gap: 8px; z-index: 50; }
+  .toast { background: var(--tinta); color: var(--papel); padding: 10px 16px; border-radius: 6px; box-shadow: 0 8px 20px -8px var(--sombra-livro); max-width: 320px; }
+
+  footer { text-align: center; padding: 16px 24px 24px; font-size: .8rem; color: var(--tinta-suave); }
+
+  /* ---------- Responsivo ---------- */
+  @media (max-width: 760px) {
+    .topo { padding: 20px 16px 4px; }
+    main { padding: 0 16px 32px; }
+    .estante { grid-template-columns: 1fr; gap: 12px; }
+    .numeros { grid-auto-flow: column; padding: 0; }
+    .numeros strong { font-size: var(--t3); }
+    .contagem { margin-left: 0; width: 100%; }
+    .tabela thead { display: none; }
+    .tabela, .tabela tbody, .tabela tr, .tabela td { display: block; }
+    .tabela tr { border-bottom: 1px solid var(--fio); padding: 12px 0; }
+    .tabela td { border: 0; padding: 4px 0; }
+    .tabela td.em-linha { display: inline-block; margin-right: 18px; }
+    .tabela td.vazio { display: none; }
+    .tabela td:last-child { padding-top: 6px; }
+    .tabela td[data-rotulo]::before { content: attr(data-rotulo) ": "; color: var(--tinta-suave); font-size: .85rem; }
+    .linha { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<header class="topo">
+  <h1 class="marca">Estante<small>Seu registro de leituras</small></h1>
+  <button type="button" class="btn-tema" id="btn-tema" aria-label="Alternar tema claro/escuro">Tema escuro</button>
+</header>
+
+<main>
+  <p class="aviso-armazenamento" id="aviso-armazenamento" role="alert" hidden>
+    ⚠ Este navegador não está guardando seus livros. Antes de fechar, use “Baixar cópia” no fim da página.
+  </p>
+
+  <section class="estante" aria-labelledby="t-estante">
+    <h2 id="t-estante" class="sr-only">Sua estante</h2>
+    <div class="prateleira">
+      <ul class="lombadas entrando" id="lombadas" aria-label="Livros na estante. Escolha um para editar."></ul>
+      <div class="tabua" aria-hidden="true"></div>
+    </div>
+    <ul class="numeros" id="numeros" aria-label="Resumo"></ul>
+  </section>
+
+  <section aria-labelledby="t-livros">
+    <h2 id="t-livros" class="sr-only">Livros</h2>
+    <div class="ferramentas">
+      <button type="button" class="btn btn-principal" id="btn-registrar"><span aria-hidden="true">+</span> Registrar livro</button>
+      <div class="busca">
+        <label for="busca" class="sr-only">Buscar por título ou autor</label>
+        <input type="search" id="busca" placeholder="Buscar por título ou autor" autocomplete="off">
+      </div>
+      <div class="chips" role="radiogroup" aria-label="Mostrar" id="filtros"></div>
+      <span class="contagem" id="contagem" aria-live="polite"></span>
+    </div>
+
+    <table class="tabela" id="tabela">
+      <caption class="sr-only">Lista de livros. Os cabeçalhos com botão ordenam a lista.</caption>
+      <thead>
+        <tr>
+          <th scope="col" aria-sort="none" data-col="titulo"><button type="button">Título e autor <span class="seta" aria-hidden="true"></span></button></th>
+          <th scope="col" aria-sort="none" data-col="situacao"><button type="button">Situação <span class="seta" aria-hidden="true"></span></button></th>
+          <th scope="col" aria-sort="none" data-col="progresso"><button type="button">Progresso <span class="seta" aria-hidden="true"></span></button></th>
+          <th scope="col" aria-sort="none" data-col="nota"><button type="button">Nota <span class="seta" aria-hidden="true"></span></button></th>
+          <th scope="col" aria-sort="descending" data-col="fim"><button type="button">Terminado em <span class="seta" aria-hidden="true"></span></button></th>
+          <th scope="col"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody id="linhas"></tbody>
+    </table>
+    <div class="sem-resultado" id="sem-resultado" hidden>
+      Nenhum livro corresponde à busca e ao filtro.
+      <button type="button" class="btn-link" id="btn-limpar-filtros">Limpar filtros</button>
+    </div>
+  </section>
+
+  <section class="dados" aria-labelledby="t-dados">
+    <h2 id="t-dados" class="sr-only">Seus dados</h2>
+    <p>Os livros ficam guardados só neste navegador. Baixe uma cópia de vez em quando para não perder nada.</p>
+    <button type="button" class="btn btn-secundario" id="btn-baixar">↓ Baixar cópia</button>
+    <button type="button" class="btn btn-secundario" id="btn-abrir">Abrir cópia</button>
+    <input type="file" id="arquivo-copia" accept="application/json,.json" hidden>
+  </section>
+</main>
+
+<footer>Desenvolvido por Roberto · v0.1</footer>
+
+<!-- Formulário do livro -->
+<dialog id="dlg-livro" aria-labelledby="dlg-livro-titulo">
+  <form method="dialog" id="form-livro" novalidate>
+    <div class="dlg-corpo">
+      <h2 id="dlg-livro-titulo">Registrar livro</h2>
+      <p class="sub">Só o título é obrigatório. O resto pode ficar para depois.</p>
+
+      <div class="resumo-pendencias" id="resumo-pendencias" role="status" hidden></div>
+
+      <div class="campo">
+        <label for="f-titulo">Título</label>
+        <input type="text" id="f-titulo" autocomplete="off" aria-describedby="e-titulo">
+        <span class="msg-erro" id="e-titulo" hidden></span>
+      </div>
+      <div class="campo">
+        <label for="f-autor">Autor</label>
+        <input type="text" id="f-autor" autocomplete="off" list="autores">
+        <datalist id="autores"></datalist>
+      </div>
+
+      <div class="campo">
+        <span class="rotulo" id="r-situacao">Situação</span>
+        <div class="chips" role="radiogroup" aria-labelledby="r-situacao" id="f-situacao"></div>
+      </div>
+
+      <div class="linha">
+        <div class="campo">
+          <label for="f-paginas">Total de páginas</label>
+          <input type="number" id="f-paginas" min="1" inputmode="numeric">
+        </div>
+        <div class="campo">
+          <label for="f-atual">Página em que parou</label>
+          <input type="number" id="f-atual" min="0" inputmode="numeric" aria-describedby="d-atual e-atual">
+          <span class="dica" id="d-atual"></span>
+          <span class="msg-erro" id="e-atual" hidden></span>
+        </div>
+      </div>
+
+      <div class="linha">
+        <div class="campo">
+          <label for="f-fim">Terminado em</label>
+          <input type="date" id="f-fim" aria-describedby="d-fim">
+          <span class="dica" id="d-fim"></span>
+        </div>
+        <div class="campo">
+          <span class="rotulo" id="r-nota">Nota</span>
+          <div class="chips" role="radiogroup" aria-labelledby="r-nota" aria-describedby="d-nota" id="f-nota"></div>
+          <span class="dica" id="d-nota"></span>
+        </div>
+      </div>
+    </div>
+    <div class="dlg-acoes">
+      <button type="button" class="btn btn-perigo esquerda" id="btn-excluir" hidden>Excluir livro</button>
+      <button type="button" class="btn btn-secundario" id="btn-cancelar">Cancelar</button>
+      <button type="button" class="btn btn-principal" id="btn-salvar">Salvar livro</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Confirmação genérica -->
+<dialog id="dlg-confirmar" aria-labelledby="c-titulo" aria-describedby="c-texto">
+  <div class="dlg-corpo">
+    <h2 id="c-titulo"></h2>
+    <div id="c-texto"></div>
+  </div>
+  <div class="dlg-acoes">
+    <button type="button" class="btn" id="c-sim"></button>
+    <button type="button" class="btn btn-principal" id="c-nao"></button>
+  </div>
+</dialog>
+
+<!-- Plano B para baixar a cópia -->
+<dialog id="dlg-copia" aria-labelledby="cp-titulo">
+  <div class="dlg-corpo">
+    <h2 id="cp-titulo">Copie seus dados manualmente</h2>
+    <p class="sub">O download não funcionou neste navegador. Selecione o texto abaixo, copie e cole num arquivo chamado <b>estante.json</b>.</p>
+    <label for="cp-texto" class="sr-only">Dados da estante</label>
+    <textarea id="cp-texto" rows="10" readonly style="width:100%;font:.8rem/1.4 Consolas,monospace;background:var(--folha-2);border:1px solid var(--fio-forte);border-radius:6px;padding:8px"></textarea>
+  </div>
+  <div class="dlg-acoes">
+    <button type="button" class="btn btn-secundario" id="cp-copiar">⧉ Copiar</button>
+    <button type="button" class="btn btn-principal" id="cp-fechar">Fechar</button>
+  </div>
+</dialog>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ===================== Dados ===================== */
+  const CHAVE = 'estante.v1';
+  const SITUACOES = [
+    { id: 'quero', nome: 'Quero ler', icone: '○' },
+    { id: 'lendo', nome: 'Lendo', icone: '◐' },
+    { id: 'lido',  nome: 'Lido',  icone: '●' }
+  ];
+  const nomeSituacao = id => SITUACOES.find(s => s.id === id).nome;
+  const iconeSituacao = id => SITUACOES.find(s => s.id === id).icone;
+  // Tons de tecido de encadernação (todos com contraste AA para o título claro da lombada)
+  const TECIDOS = ['#1d5c46', '#24476b', '#7a2e2e', '#7a5a1c', '#44535c', '#5e3b5c', '#2a6262', '#5b4a2f'];
+
+  // Exemplos: obras clássicas, número de páginas aproximado (varia por edição)
+  const EXEMPLOS = [
+    { titulo: 'Dom Casmurro', autor: 'Machado de Assis', paginas: 256, atual: 256, situacao: 'lido', nota: 5, fim: anoAtual() + '-02-14' },
+    { titulo: 'Memórias Póstumas de Brás Cubas', autor: 'Machado de Assis', paginas: 240, atual: 240, situacao: 'lido', nota: 4, fim: anoAtual() + '-04-02' },
+    { titulo: 'O Cortiço', autor: 'Aluísio Azevedo', paginas: 304, atual: 304, situacao: 'lido', nota: 4, fim: anoAtual() + '-06-20' },
+    { titulo: 'Iracema', autor: 'José de Alencar', paginas: 144, atual: 144, situacao: 'lido', nota: 3, fim: (anoAtual() - 1) + '-11-08' },
+    { titulo: 'Os Sertões', autor: 'Euclides da Cunha', paginas: 640, atual: 212, situacao: 'lendo', nota: null, fim: '' },
+    { titulo: 'Quincas Borba', autor: 'Machado de Assis', paginas: 288, atual: 90, situacao: 'lendo', nota: null, fim: '' },
+    { titulo: 'O Ateneu', autor: 'Raul Pompeia', paginas: null, atual: null, situacao: 'quero', nota: null, fim: '' },
+    { titulo: 'Triste Fim de Policarpo Quaresma', autor: '', paginas: 272, atual: null, situacao: 'quero', nota: null, fim: '' }
+  ];
+
+  function anoAtual() { return new Date().getFullYear(); }
+  function hoje() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function novoId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function hash(txt) { let h = 0; for (const c of txt) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h); }
+
+  let armazenamentoOk = true;
+  function carregar() {
+    try {
+      const bruto = localStorage.getItem(CHAVE);
+      return bruto ? JSON.parse(bruto) : [];
+    } catch (e) { armazenamentoOk = false; return []; }
+  }
+  function guardar() {
+    try { localStorage.setItem(CHAVE, JSON.stringify(livros)); armazenamentoOk = true; }
+    catch (e) { armazenamentoOk = false; }
+    document.getElementById('aviso-armazenamento').hidden = armazenamentoOk;
+  }
+
+  let livros = carregar();
+  const estado = { filtro: 'todos', busca: '', ordem: { col: 'fim', dir: -1 } };
+
+  /* Pendências de um livro: o que falta, sem bloquear */
+  function pendenciasDe(l) {
+    const p = [];
+    if (!l.autor) p.push('autor');
+    if (l.situacao !== 'quero' && !l.paginas) p.push('total de páginas');
+    if (l.situacao === 'lendo' && (l.atual === null || l.atual === undefined || l.atual === '')) p.push('página em que parou');
+    if (l.situacao === 'lido' && !l.fim) p.push('data em que terminou');
+    if (l.situacao === 'lido' && !l.nota) p.push('nota');
+    return p;
+  }
+  function fracaoLida(l) {
+    if (l.situacao === 'lido') return 1;
+    if (l.situacao === 'quero' || !l.paginas) return 0;
+    return Math.max(0, Math.min(1, (Number(l.atual) || 0) / l.paginas));
+  }
+
+  /* ===================== Utilidades de interface ===================== */
+  const $ = id => document.getElementById(id);
+  const fmt = n => n.toLocaleString('pt-BR');
+  function fmtData(iso) {
+    if (!iso) return '';
+    const [a, m, d] = iso.split('-');
+    return d + '/' + m + '/' + a;
+  }
+  function el(tag, attrs, ...filhos) {
+    const e = document.createElement(tag);
+    for (const k in attrs || {}) {
+      if (k === 'class') e.className = attrs[k];
+      else if (k === 'style') e.style.cssText = attrs[k];
+      else if (k.startsWith('on')) e.addEventListener(k.slice(2), attrs[k]);
+      else if (attrs[k] !== null && attrs[k] !== undefined && attrs[k] !== false) e.setAttribute(k, attrs[k]);
+    }
+    for (const f of filhos) if (f !== null && f !== undefined) e.append(f.nodeType ? f : String(f));
+    return e;
+  }
+  function aviso(texto) {
+    const t = el('div', { class: 'toast', role: 'status' }, texto);
+    $('toasts').append(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  /* Grupo de chips com roving tabindex: Tab entra no grupo, setas movem */
+  function grupoChips(container, opcoes, valor, aoMudar, opts) {
+    opts = opts || {};
+    container.replaceChildren();
+    const botoes = opcoes.map(o => el('button', {
+      type: 'button', class: 'chip', role: 'radio', 'data-valor': o.valor,
+      'aria-checked': String(o.valor === valor), tabindex: '-1', 'aria-label': o.rotuloAcessivel || null
+    }, o.rotulo));
+    function marcar(v, focar) {
+      botoes.forEach(b => {
+        const sel = b.dataset.valor === String(v);
+        b.setAttribute('aria-checked', String(sel));
+        b.tabIndex = sel ? 0 : -1;
+        if (sel && focar) b.focus();
+      });
+      if (!botoes.some(b => b.tabIndex === 0) && botoes[0]) botoes[0].tabIndex = 0;
+    }
+    botoes.forEach((b, i) => {
+      b.addEventListener('click', () => {
+        if (b.disabled) return;
+        const v = b.dataset.valor;
+        const atual = botoes.find(x => x.getAttribute('aria-checked') === 'true');
+        const novo = (opts.desmarcavel && atual === b) ? null : v;
+        marcar(novo, false);
+        aoMudar(novo);
+      });
+      b.addEventListener('keydown', ev => {
+        const passo = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[ev.key];
+        if (!passo) return;
+        ev.preventDefault();
+        const ativos = botoes.filter(x => !x.disabled);
+        const j = (ativos.indexOf(b) + passo + ativos.length) % ativos.length;
+        ativos[j].click();
+        ativos[j].focus();
+      });
+      container.append(b);
+    });
+    marcar(valor, false);
+    return { marcar, botoes };
+  }
+
+  /* ===================== Tema ===================== */
+  function aplicarTema(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    $('btn-tema').textContent = t === 'dark' ? 'Tema claro' : 'Tema escuro';
+  }
+  let temaInicial = 'light';
+  try { temaInicial = localStorage.getItem('estante.tema') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch (e) {}
+  aplicarTema(temaInicial);
+  $('btn-tema').addEventListener('click', () => {
+    const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    aplicarTema(t);
+    try { localStorage.setItem('estante.tema', t); } catch (e) {}
+  });
+
+  /* ===================== Estante ===================== */
+  function desenharEstante(idNovo) {
+    const ul = $('lombadas');
+    ul.replaceChildren();
+    const ordem = { lido: 0, lendo: 1, quero: 2 };
+    const naEstante = [...livros].sort((a, b) =>
+      ordem[a.situacao] - ordem[b.situacao] || (a.fim || '').localeCompare(b.fim || '') || a.titulo.localeCompare(b.titulo, 'pt-BR'));
+
+    if (!naEstante.length) {
+      ul.append(el('li', { class: 'estante-vazia' },
+        el('p', null, 'Sua estante está vazia.'),
+        'Registre o livro que você está lendo agora, ou veja como a estante fica com alguns exemplos.',
+        el('div', { class: 'acoes-vazio', style: 'margin-top:16px' },
+          el('button', { type: 'button', class: 'btn btn-principal', onclick: () => abrirFormulario(null) }, '+ Registrar livro'),
+          el('button', { type: 'button', class: 'btn btn-secundario', onclick: carregarExemplos }, 'Ver com exemplos'))));
+      return;
+    }
+
+    naEstante.forEach((l, i) => {
+      const h = hash(l.titulo);
+      const largura = l.paginas ? Math.round(Math.min(58, Math.max(24, l.paginas / 9))) : 30;
+      const altura = 188 + (h % 6) * 10;
+      const lida = fracaoLida(l);
+      const descricao = l.titulo + (l.autor ? ', de ' + l.autor : '') + '. ' + nomeSituacao(l.situacao) +
+        (l.situacao === 'lendo' && l.paginas ? ', ' + Math.round(lida * 100) + '% lido' : '') + '. Editar.';
+      const b = el('button', {
+        type: 'button', class: 'lombada ' + l.situacao + (l.id === idNovo ? ' nova' : ''),
+        style: `width:${largura}px;height:${altura}px;--cor:${TECIDOS[h % TECIDOS.length]};--lido:${lida};--i:${i}`,
+        'aria-label': descricao, title: l.titulo,
+        onclick: () => abrirFormulario(l.id)
+      }, el('span', { class: 'titulo-lombada', 'aria-hidden': 'true' }, l.titulo));
+      if (l.situacao === 'lendo') b.append(el('span', { class: 'fita', 'aria-hidden': 'true' }));
+      ul.append(el('li', null, b));
+    });
+  }
+
+  function desenharNumeros() {
+    const ano = String(anoAtual());
+    const lendo = livros.filter(l => l.situacao === 'lendo').length;
+    const lidosAno = livros.filter(l => l.situacao === 'lido' && (l.fim || '').startsWith(ano));
+    const paginas = livros.reduce((s, l) => {
+      if (l.situacao === 'lido' && (l.fim || '').startsWith(ano)) return s + (Number(l.paginas) || 0);
+      if (l.situacao === 'lendo') return s + (Number(l.atual) || 0);
+      return s;
+    }, 0);
+    $('numeros').replaceChildren(
+      el('li', null, el('strong', null, fmt(lendo)), el('span', null, lendo === 1 ? 'livro em leitura' : 'livros em leitura')),
+      el('li', null, el('strong', null, fmt(lidosAno.length)), el('span', null, (lidosAno.length === 1 ? 'livro lido em ' : 'livros lidos em ') + ano)),
+      el('li', null, el('strong', null, fmt(paginas)), el('span', null, 'páginas lidas em ' + ano))
+    );
+  }
+
+  /* ===================== Lista ===================== */
+  const filtros = grupoChips($('filtros'),
+    [{ valor: 'todos', rotulo: 'Todos' }, ...SITUACOES.map(s => ({ valor: s.id, rotulo: s.nome }))],
+    'todos', v => { estado.filtro = v; desenharLista(); });
+
+  function chaveOrdem(l, col) {
+    switch (col) {
+      case 'titulo': return l.titulo.toLocaleLowerCase('pt-BR');
+      case 'situacao': return { lendo: 0, quero: 1, lido: 2 }[l.situacao];
+      case 'progresso': return fracaoLida(l);
+      case 'nota': return l.nota || 0;
+      case 'fim': return l.fim || '';
+    }
+  }
+
+  function desenharLista() {
+    const termo = estado.busca.trim().toLocaleLowerCase('pt-BR');
+    const visiveis = livros
+      .filter(l => estado.filtro === 'todos' || l.situacao === estado.filtro)
+      .filter(l => !termo || (l.titulo + ' ' + (l.autor || '')).toLocaleLowerCase('pt-BR').includes(termo))
+      .sort((a, b) => {
+        const { col, dir } = estado.ordem;
+        const x = chaveOrdem(a, col), y = chaveOrdem(b, col);
+        const c = typeof x === 'string' ? x.localeCompare(y, 'pt-BR') : x - y;
+        return c * dir || a.titulo.localeCompare(b.titulo, 'pt-BR');
+      });
+
+    $('contagem').textContent = livros.length ? `${fmt(visiveis.length)} de ${fmt(livros.length)} livros` : '';
+    $('tabela').hidden = !visiveis.length;
+    $('sem-resultado').hidden = !(livros.length && !visiveis.length);
+
+    document.querySelectorAll('#tabela th[data-col]').forEach(th => {
+      const ativo = th.dataset.col === estado.ordem.col;
+      th.setAttribute('aria-sort', ativo ? (estado.ordem.dir === 1 ? 'ascending' : 'descending') : 'none');
+      th.querySelector('.seta').textContent = ativo ? (estado.ordem.dir === 1 ? '▲' : '▼') : '';
+    });
+
+    $('linhas').replaceChildren(...visiveis.map(l => {
+      const pend = pendenciasDe(l);
+      const lida = fracaoLida(l);
+      let progresso;
+      if (l.situacao === 'quero') progresso = el('small', null, l.paginas ? fmt(l.paginas) + ' páginas' : '');
+      else progresso = el('div', { class: 'progresso' },
+        el('div', { class: 'barra', role: 'img', 'aria-label': Math.round(lida * 100) + '% lido' }, el('i', { style: `width:${lida * 100}%` })),
+        el('small', null, l.paginas ? `${fmt(l.situacao === 'lido' ? l.paginas : (Number(l.atual) || 0))} de ${fmt(l.paginas)} páginas` : 'Total de páginas não informado'));
+      return el('tr', null,
+        el('td', null,
+          el('div', { class: 'livro-titulo' }, l.titulo),
+          el('div', { class: 'livro-autor' }, l.autor || 'Autor não informado'),
+          pend.length ? el('div', { class: 'pendencia' }, el('span', { 'aria-hidden': 'true' }, '⚠'), 'Falta: ' + pend.join(', ')) : null),
+        el('td', { class: 'situacao em-linha' }, el('span', { 'aria-hidden': 'true' }, iconeSituacao(l.situacao) + ' '), nomeSituacao(l.situacao)),
+        el('td', { class: l.situacao === 'quero' && !l.paginas ? 'vazio' : null }, progresso),
+        el('td', { class: 'em-linha' + (l.nota ? '' : ' vazio'), 'data-rotulo': 'Nota' }, l.nota ? el('span', { 'aria-label': l.nota + ' de 5' }, '★'.repeat(l.nota) + '☆'.repeat(5 - l.nota)) : '—'),
+        el('td', { class: 'em-linha' + (l.fim ? '' : ' vazio'), 'data-rotulo': 'Terminado em' }, fmtData(l.fim) || '—'),
+        el('td', null, el('button', { type: 'button', class: 'btn-link', 'aria-label': 'Editar ' + l.titulo, onclick: () => abrirFormulario(l.id) }, 'Editar'))
+      );
+    }));
+  }
+
+  document.querySelectorAll('#tabela th[data-col] button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const col = btn.parentElement.dataset.col;
+      estado.ordem = estado.ordem.col === col ? { col, dir: -estado.ordem.dir } : { col, dir: col === 'titulo' ? 1 : -1 };
+      desenharLista();
+    });
+  });
+  $('busca').addEventListener('input', e => { estado.busca = e.target.value; desenharLista(); });
+  $('btn-limpar-filtros').addEventListener('click', () => {
+    estado.busca = ''; $('busca').value = ''; estado.filtro = 'todos'; filtros.marcar('todos'); desenharLista(); $('busca').focus();
+  });
+
+  function desenharTudo(idNovo) { desenharEstante(idNovo); desenharNumeros(); desenharLista(); }
+
+  /* ===================== Confirmação ===================== */
+  // O foco começa no lado seguro (botão "não"). Esc também escolhe o lado seguro.
+  function confirmar({ titulo, texto, sim, nao, perigo }) {
+    return new Promise(resolver => {
+      const dlg = $('dlg-confirmar');
+      $('c-titulo').textContent = titulo;
+      $('c-texto').replaceChildren(...(Array.isArray(texto) ? texto : [texto]));
+      $('c-sim').textContent = sim; $('c-sim').className = 'btn ' + (perigo ? 'btn-perigo' : 'btn-secundario');
+      $('c-nao').textContent = nao;
+      const fim = r => { dlg.close(); limpar(); resolver(r); };
+      const s = () => fim(true), n = () => fim(false), c = e => { e.preventDefault(); fim(false); };
+      function limpar() { $('c-sim').removeEventListener('click', s); $('c-nao').removeEventListener('click', n); dlg.removeEventListener('cancel', c); }
+      $('c-sim').addEventListener('click', s); $('c-nao').addEventListener('click', n); dlg.addEventListener('cancel', c);
+      dlg.showModal();
+      $('c-nao').focus();
+    });
+  }
+
+  /* ===================== Formulário ===================== */
+  const f = {
+    dlg: $('dlg-livro'), titulo: $('f-titulo'), autor: $('f-autor'), paginas: $('f-paginas'),
+    atual: $('f-atual'), fim: $('f-fim')
+  };
+  let edicao = null;          // id do livro em edição, ou null para novo
+  let rascunho = null;        // valores atuais do formulário
+  let original = '';          // para saber se houve alteração
+
+  const chipsSituacao = grupoChips($('f-situacao'),
+    SITUACOES.map(s => ({ valor: s.id, rotulo: s.icone + ' ' + s.nome, rotuloAcessivel: s.nome })), 'lendo',
+    v => { rascunho.situacao = v; if (v === 'lido' && !f.fim.value) f.fim.value = hoje(); atualizarFormulario(); });
+  const chipsNota = grupoChips($('f-nota'),
+    [1, 2, 3, 4, 5].map(n => ({ valor: String(n), rotulo: '★'.repeat(n), rotuloAcessivel: n + (n === 1 ? ' estrela' : ' estrelas') })), null,
+    v => { rascunho.nota = v ? Number(v) : null; atualizarFormulario(); }, { desmarcavel: true });
+
+  function lerCampos() {
+    rascunho.titulo = f.titulo.value.trim();
+    rascunho.autor = f.autor.value.trim();
+    rascunho.paginas = f.paginas.value ? Number(f.paginas.value) : null;
+    rascunho.atual = f.atual.value !== '' ? Number(f.atual.value) : null;
+    rascunho.fim = f.fim.value;
+  }
+
+  function errosDe(r) {
+    const e = {};
+    if (!r.titulo) e.titulo = 'Escreva o título para salvar o livro.';
+    if (r.situacao === 'lendo' && r.atual !== null && r.paginas && r.atual > r.paginas)
+      e.atual = `A página em que parou (${fmt(r.atual)}) passa do total (${fmt(r.paginas)}). Corrija um dos dois.`;
+    if (r.atual !== null && r.atual < 0) e.atual = 'A página não pode ser negativa.';
+    return e;
+  }
+
+  function atualizarFormulario(mostrarErros) {
+    lerCampos();
+    const r = rascunho;
+    // Prevenção de erro: campos que não se aplicam à situação ficam desabilitados, com o motivo
+    const lendo = r.situacao === 'lendo', lido = r.situacao === 'lido';
+    f.atual.disabled = !lendo;
+    $('d-atual').textContent = lendo ? '' : 'Usado só quando a situação é “Lendo”.';
+    f.fim.disabled = !lido;
+    $('d-fim').textContent = lido ? '' : 'Usado só quando a situação é “Lido”.';
+    chipsNota.botoes.forEach(b => { b.disabled = !lido; b.title = lido ? '' : 'Dê nota quando terminar o livro.'; });
+    $('d-nota').textContent = lido ? '' : 'Dê nota quando terminar o livro.';
+
+    const erros = errosDe(r);
+    for (const [campo, input] of [['titulo', f.titulo], ['atual', f.atual]]) {
+      const msg = $('e-' + campo);
+      const mostrar = erros[campo] && (mostrarErros || (campo === 'atual'));
+      msg.hidden = !mostrar; msg.textContent = mostrar ? '✕ ' + erros[campo] : '';
+      input.setAttribute('aria-invalid', mostrar ? 'true' : 'false');
+    }
+
+    const pend = r.titulo ? pendenciasDe(r) : [];
+    const resumo = $('resumo-pendencias');
+    resumo.hidden = !pend.length;
+    if (pend.length) resumo.replaceChildren(el('strong', null, '⚠ Falta preencher (' + pend.length + '): '), pend.join(', ') + '. Você pode salvar assim mesmo e completar depois.');
+    return { erros, pend };
+  }
+
+  function abrirFormulario(id) {
+    edicao = id;
+    const l = id ? livros.find(x => x.id === id) : null;
+    rascunho = l ? { ...l } : { titulo: '', autor: '', paginas: null, atual: null, situacao: 'lendo', nota: null, fim: '' };
+    f.titulo.value = rascunho.titulo; f.autor.value = rascunho.autor || '';
+    f.paginas.value = rascunho.paginas ?? ''; f.atual.value = rascunho.atual ?? ''; f.fim.value = rascunho.fim || '';
+    chipsSituacao.marcar(rascunho.situacao); chipsNota.marcar(rascunho.nota ? String(rascunho.nota) : null);
+    $('dlg-livro-titulo').textContent = l ? 'Editar livro' : 'Registrar livro';
+    $('btn-salvar').textContent = l ? 'Salvar alterações' : 'Salvar livro';
+    $('btn-excluir').hidden = !l;
+    $('autores').replaceChildren(...[...new Set(livros.map(x => x.autor).filter(Boolean))].map(a => el('option', { value: a })));
+    $('e-titulo').hidden = true; f.titulo.setAttribute('aria-invalid', 'false');
+    atualizarFormulario();
+    original = JSON.stringify(rascunho);
+    f.dlg.showModal();
+    f.titulo.focus();
+  }
+
+  async function fecharFormulario() {
+    lerCampos();
+    if (JSON.stringify(rascunho) !== original) {
+      const descartar = await confirmar({
+        titulo: 'Descartar o que você escreveu?',
+        texto: 'As alterações neste livro ainda não foram salvas.',
+        sim: 'Descartar alterações', nao: 'Continuar editando', perigo: true
+      });
+      if (!descartar) { f.dlg.showModal(); return; }
+    }
+    f.dlg.close();
+  }
+
+  async function salvar() {
+    const { erros, pend } = atualizarFormulario(true);
+    const primeiroErro = Object.keys(erros)[0];
+    if (primeiroErro) { (primeiroErro === 'titulo' ? f.titulo : f.atual).focus(); return; }
+    if (pend.length) {
+      f.dlg.close();
+      const ok = await confirmar({
+        titulo: 'Salvar com pendências?',
+        texto: [el('p', { style: 'margin:0' }, 'Ainda falta preencher:'), el('ul', { class: 'lista-pendencias' }, ...pend.map(p => el('li', null, p))), el('p', { style: 'margin:12px 0 0', class: 'sub' }, 'O livro fica marcado com ⚠ na lista até você completar.')],
+        sim: 'Salvar assim mesmo', nao: 'Voltar e completar'
+      });
+      if (!ok) { f.dlg.showModal(); focarPrimeiraPendencia(pend); return; }
+    }
+    const r = { ...rascunho };
+    if (r.situacao !== 'lendo') r.atual = r.situacao === 'lido' ? r.paginas : null;
+    if (r.situacao !== 'lido') { r.fim = ''; r.nota = null; }
+    let idNovo = null;
+    if (edicao) livros = livros.map(x => x.id === edicao ? { ...r, id: edicao } : x);
+    else { idNovo = novoId(); livros.push({ ...r, id: idNovo }); }
+    guardar();
+    if (f.dlg.open) f.dlg.close();
+    desenharTudo(idNovo);
+    aviso(edicao ? 'Alterações salvas.' : 'Livro salvo na estante.');
+  }
+
+  function focarPrimeiraPendencia(pend) {
+    const mapa = { 'autor': f.autor, 'total de páginas': f.paginas, 'página em que parou': f.atual, 'data em que terminou': f.fim };
+    const alvo = mapa[pend[0]] || chipsNota.botoes.find(b => b.tabIndex === 0);
+    if (alvo) alvo.focus();
+  }
+
+  async function excluir() {
+    const l = livros.find(x => x.id === edicao);
+    f.dlg.close();
+    const ok = await confirmar({
+      titulo: 'Excluir este livro?', texto: `“${l.titulo}” sai da estante e da lista. Não dá para desfazer depois.`,
+      sim: 'Excluir livro', nao: 'Manter livro', perigo: true
+    });
+    if (!ok) { f.dlg.showModal(); return; }
+    livros = livros.filter(x => x.id !== edicao);
+    guardar(); desenharTudo(); aviso('Livro excluído.');
+    $('btn-registrar').focus();
+  }
+
+  // Enter avança para o próximo campo em vez de enviar
+  f.dlg.addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter' || ev.target.tagName !== 'INPUT') return;
+    ev.preventDefault();
+    const campos = [...f.dlg.querySelectorAll('input:not(:disabled), .chip[tabindex="0"]:not(:disabled)')];
+    const proximo = campos[campos.indexOf(ev.target) + 1];
+    if (proximo) proximo.focus(); else $('btn-salvar').focus();
+  });
+  f.dlg.addEventListener('input', () => atualizarFormulario());
+  f.dlg.addEventListener('cancel', ev => { ev.preventDefault(); fecharFormulario(); });
+  $('btn-cancelar').addEventListener('click', fecharFormulario);
+  $('btn-salvar').addEventListener('click', salvar);
+  $('btn-excluir').addEventListener('click', excluir);
+  $('btn-registrar').addEventListener('click', () => abrirFormulario(null));
+
+  /* ===================== Exemplos e cópia ===================== */
+  function carregarExemplos() {
+    livros = EXEMPLOS.map(x => ({ ...x, id: novoId() }));
+    guardar();
+    $('lombadas').classList.add('entrando');
+    setTimeout(() => $('lombadas').classList.remove('entrando'), 1400);
+    desenharTudo();
+    aviso('Exemplos carregados. Edite ou exclua à vontade.');
+  }
+
+  $('btn-baixar').addEventListener('click', () => {
+    const json = JSON.stringify({ versao: 1, exportadoEm: new Date().toISOString(), livros }, null, 2);
+    try {
+      const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+      const a = el('a', { href: url, download: 'estante-' + hoje() + '.json' });
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      aviso('Cópia baixada.');
+    } catch (e) {
+      // Plano B: mostrar os dados para copiar à mão
+      $('cp-texto').value = json; $('dlg-copia').showModal(); $('cp-texto').select();
+    }
+  });
+  $('cp-fechar').addEventListener('click', () => $('dlg-copia').close());
+  $('cp-copiar').addEventListener('click', async () => {
+    $('cp-texto').select();
+    try { await navigator.clipboard.writeText($('cp-texto').value); aviso('Dados copiados.'); }
+    catch (e) { aviso('Não foi possível copiar. Use Ctrl+C com o texto selecionado.'); }
+  });
+
+  $('btn-abrir').addEventListener('click', () => $('arquivo-copia').click());
+  $('arquivo-copia').addEventListener('change', async ev => {
+    const arq = ev.target.files[0]; ev.target.value = '';
+    if (!arq) return;
+    let dados;
+    try { dados = JSON.parse(await arq.text()); } catch (e) { aviso('Este arquivo não é uma cópia da Estante. Escolha um arquivo .json baixado aqui.'); return; }
+    const lista = Array.isArray(dados) ? dados : dados.livros;
+    if (!Array.isArray(lista) || lista.some(l => !l || typeof l.titulo !== 'string' || !SITUACOES.some(s => s.id === l.situacao))) {
+      aviso('Este arquivo não é uma cópia da Estante. Escolha um arquivo .json baixado aqui.'); return;
+    }
+    if (livros.length) {
+      const ok = await confirmar({
+        titulo: 'Trocar a estante pela cópia?',
+        texto: `Os ${fmt(livros.length)} livros de agora serão substituídos pelos ${fmt(lista.length)} livros da cópia.`,
+        sim: 'Trocar pela cópia', nao: 'Manter a estante atual', perigo: true
+      });
+      if (!ok) return;
+    }
+    livros = lista.map(l => ({ ...l, id: l.id || novoId() }));
+    guardar(); desenharTudo(); aviso('Cópia aberta: ' + fmt(livros.length) + ' livros.');
+  });
+
+  /* ===================== Início ===================== */
+  if (!armazenamentoOk) $('aviso-armazenamento').hidden = false;
+  desenharTudo();
+  // A entrada orquestrada acontece só uma vez
+  setTimeout(() => $('lombadas').classList.remove('entrando'), 1400);
+})();
+</script>
+</body>
+</html>
