@@ -13,7 +13,7 @@ Um registro pessoal de leituras. Cada livro vira uma lombada na prateleira: a la
 
 ## Como usar
 
-1. Abra o `index.html` no navegador. Não precisa instalar nada nem estar conectado à internet.
+1. Abra **https://b4sileus-py.github.io/Praticando/estante/**, ou baixe a pasta e abra o `index.html` no navegador. Baixando, não precisa instalar nada nem estar conectado à internet.
 2. Clique em **Registrar livro**, ou em **Ver com exemplos** para ver a estante preenchida.
 3. Clique numa lombada ou em **Editar** para atualizar a página em que parou.
 

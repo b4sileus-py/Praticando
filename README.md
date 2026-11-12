@@ -6,11 +6,13 @@ Aqui eu pratico usabilidade (heurísticas de Nielsen e Design Centrado no Usuár
 
 ## Projetos
 
-| Projeto | O que é | Tipo | Versão |
-|---|---|---|---|
-| [Estante](estante/) | Registro pessoal de leituras: o que estou lendo, o que já li e o que quero ler, numa estante desenhada a partir dos próprios livros. | Sistema web, HTML único e offline | 0.1 |
+| Projeto | O que é | Tipo | Versão | Abrir |
+|---|---|---|---|---|
+| [Estante](estante/) | Registro pessoal de leituras: o que estou lendo, o que já li e o que quero ler, numa estante desenhada a partir dos próprios livros. | Sistema web, HTML único e offline | 0.1 | [Abrir no navegador](https://b4sileus-py.github.io/Praticando/estante/) |
 
 ## Como abrir um projeto
+
+O jeito mais rápido é o link **Abrir no navegador** na tabela acima. Para usar no seu computador:
 
 1. Baixe o repositório (**Code → Download ZIP**) ou clone com `git clone https://github.com/b4sileus-py/Praticando.git`.
 2. Entre na pasta do projeto e abra o `index.html` no navegador.
